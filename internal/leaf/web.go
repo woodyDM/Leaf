@@ -62,12 +62,12 @@ func StartServer(port int) {
 	// logger and recovery (crash-free) middleware
 	router := gin.Default()
 
-	router.GET("/health", health)
-	router.GET("/env", env)
+	router.GET("/api/health", health)
+	router.GET("/api/env", env)
 
-	router.POST("/v1/login", cookieHandler, loginC)
+	router.POST("/api/v1/login", cookieHandler, loginC)
 
-	v1 := router.Group("/v1", cookieHandler, authHandler)
+	v1 := router.Group("/api/v1", cookieHandler, authHandler)
 	{
 		app := v1.Group("/app")
 		{
