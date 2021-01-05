@@ -293,7 +293,7 @@ func applicationDetail(ctx *gin.Context) {
 
 func appList(c *gin.Context) {
 	var apps []Application
-	Db.Find(&apps)
+	Db.Order("id desc").Find(&apps)
 	c.JSON(200, ok(apps))
 }
 
@@ -326,8 +326,14 @@ func saveApplication(c *gin.Context) {
 			c.JSON(200, fail(err.Error()))
 			return
 		}
-		Db.Create(&app)
-		c.JSON(200, ok(app.ID))
+		toSave:=Application{
+			Name:    app.Name,
+			Enable:  app.Enable,
+			GitUrl:  app.GitUrl,
+			Command: app.Command,
+		}
+		Db.Create(&toSave)
+		c.JSON(200, ok(toSave.ID))
 		return
 	} else {
 		if !exist {
@@ -355,7 +361,7 @@ func saveApplication(c *gin.Context) {
 		if err != nil {
 			c.JSON(200, fail("更新失败"))
 		} else {
-			c.JSON(200, ok("OK"))
+			c.JSON(200, ok(app.ID))
 		}
 	}
 }
