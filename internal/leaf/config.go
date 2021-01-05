@@ -15,6 +15,8 @@ var GlobalConfig AppConfig
 const gitHomePrefix = "workspace"
 const taskPrefix = "task_%d"
 
+
+
 type AppConfig struct {
 	Home        string
 	ShellEnable bool

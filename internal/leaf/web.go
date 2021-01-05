@@ -60,14 +60,16 @@ func (query TaskPageQuery) defaultPage() {
 
 func StartServer(port int) {
 	// logger and recovery (crash-free) middleware
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
+	logger := gin.Logger()
 
 	router.GET("/api/health", health)
 	router.GET("/api/env", env)
 
-	router.POST("/api/v1/login", cookieHandler, loginC)
+	router.Use(logger, cookieHandler).POST("/api/v1/login", loginC)
 
-	v1 := router.Group("/api/v1", cookieHandler, authHandler)
+	v1 := router.Group("/api/v1",   authHandler)
 	{
 		app := v1.Group("/app")
 		{
@@ -326,7 +328,7 @@ func saveApplication(c *gin.Context) {
 			c.JSON(200, fail(err.Error()))
 			return
 		}
-		toSave:=Application{
+		toSave := Application{
 			Name:    app.Name,
 			Enable:  app.Enable,
 			GitUrl:  app.GitUrl,

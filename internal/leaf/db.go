@@ -1,61 +1,82 @@
 package leaf
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"io/ioutil"
 	"log"
 	"path"
 )
 
-type Product struct {
-	gorm.Model
-	Code  string
-	Price uint
-}
-
 var Db *gorm.DB
 
-func init() {
+type DbMode string
+
+const (
+	Sqlite DbMode = "sqlite"
+	Mysql  DbMode = "mysql"
+)
+
+var DefaultDbConfig = DbConfig{
+	Mode: Sqlite,
+}
+
+type DbConfig struct {
+	Url  string `json:"url"`
+	Mode DbMode `json:"mode"`
+}
+
+func InitDefault() error {
+	return initDatabase(&DefaultDbConfig)
+}
+func InitWithConfig(path string) error {
+	log.Printf("Reading configuration from file:[%s] ", path)
+	bytes, e := ioutil.ReadFile(path)
+	if e != nil {
+		return e
+	}
+	var conf DbConfig
+	e = json.Unmarshal(bytes, &conf)
+	if e != nil {
+		return e
+	}
+	if conf.Url == "" {
+		return errors.New("Empty url .invalid config. ")
+	}
+	log.Printf("Configuration loaded from %s.", path)
+	return initDatabase(&conf)
+}
+
+func initDatabase(c *DbConfig) error {
 	home := GlobalConfig.Home
-	dbPath := path.Join(home, "leaf.db")
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	var dbPath string
+	var err error
+	if c.Mode == Mysql {
+		dbPath = c.Url
+		Db, err = gorm.Open(mysql.Open(dbPath), &gorm.Config{})
+	} else if c.Mode == Sqlite {
+		dbPath = path.Join(home, "leaf.db")
+		Db, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	} else {
+		return errors.New("Invalid db mode. ")
+	}
 	if err != nil {
 		panic(errors.New(fmt.Sprintf("Failed to connect database %s", dbPath)))
 	}
-	log.Printf("Connect to %s success!", dbPath)
-	Db = db
+	log.Printf(" Using [%s mode], Connect to %s success!", c.Mode, dbPath)
 	//create table if need
+	migrateTables()
+	return nil
+}
+
+func migrateTables() {
 	Db.AutoMigrate(&Application{})
 	Db.AutoMigrate(&Task{})
 	Db.AutoMigrate(&Env{})
 	Db.AutoMigrate(&UsedEnv{})
 	Db.AutoMigrate(&User{})
 }
-
-//todo delete
-func RunSample() {
-
-	// Migrate the schema
-
-
-	// Create
-	Db.Create(&Product{Code: "D42", Price: 100})
-
-	// Read
-	var product Product
-	Db.First(&product, 1)                 // find product with integer primary key
-	Db.First(&product, "code = ?", "D42") // find product with code D42
-
-	// Update - update product's price to 200
-	Db.Model(&product).Update("Price", 200)
-	// Update - update multiple fields
-	Db.Model(&product).Updates(Product{Price: 200, Code: "F42"}) // non-zero fields
-	Db.Model(&product).Updates(map[string]interface{}{"Price": 200, "Code": "F42"})
-
-	// Delete - delete product
-	//	db.Delete(&product, 1)
-}
-
-
