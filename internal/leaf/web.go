@@ -369,5 +369,5 @@ func saveApplication(c *gin.Context) {
 }
 
 func health(c *gin.Context) {
-	c.String(200, "Service is on")
+	c.String(200, "Service is on v1.1")
 }
