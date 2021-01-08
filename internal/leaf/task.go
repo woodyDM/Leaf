@@ -53,8 +53,9 @@ func taskDetail(id uint) (*Task, bool) {
 	Db.Find(&task, id)
 	if task.Status==Running{
 		ctx, exist := CommonPool.get(id)
-		if exist {
-			task.Log = ctx.buf.String()
+		if exist    {
+			it,_:=ctx.(*exeCtx)
+			task.Log = it.buf.String()
 		}
 	}
 	return &task, task.ID != 0
