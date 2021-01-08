@@ -25,20 +25,16 @@ type EnvShell struct {
 	content      string
 }
 
-var cloneShell = `#!/bin/sh
+var cloneShell = `
 cd %s
-echo "[Leaf]Start to clone ."
 git clone --progress %s
-echo "[Leaf]Clone complete "
 cd %s
 %s
 %s
 `
-var pullShell = `#!/bin/sh
+var pullShell = `
 cd %s
-echo "[Leaf]Start to pull ."
 git pull
-echo "[Leaf]Pull complete "
 %s
 %s
 `
@@ -146,7 +142,6 @@ func (e *EnvCommand) command() string {
 	buf.WriteString(fmt.Sprintf("echo \"[Leaf]Export %d envs\"\n", len(s)))
 	for _, it := range s {
 		cmd := fmt.Sprintf("export %s=%s", it.variableName, it.fileName)
-		buf.WriteString(fmt.Sprintf("echo \"[Leaf]%s\"\n", cmd))
 		buf.WriteString(fmt.Sprintf("%s\n", cmd))
 	}
 	return buf.String()

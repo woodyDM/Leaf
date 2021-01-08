@@ -26,7 +26,7 @@ func (ctx *exeCtx) runnerId() uint {
 }
 
 func (ctx *exeCtx) run() {
-	changeStatus(ctx)
+	taskToRunning(ctx)
 	err := createEvnFiles(ctx.env)
 	if err != nil {
 		ctx.Warning(err.Error())
@@ -44,7 +44,6 @@ func (ctx *exeCtx) run() {
 	} else {
 		updateTaskStatus(ctx, Fail)
 	}
-
 }
 
 func (ctx *exeCtx) shutdown() {
@@ -56,14 +55,14 @@ func (ctx *exeCtx) Info(msg string) {
 }
 
 func (ctx *exeCtx) Warning(msg string) {
-	ctx.buf.WriteString("[Leaf] ============= WARNING ============= \n")
+	ctx.buf.WriteString("============= WARNING ============= \n")
 	ctx.buf.WriteString(fmt.Sprintf("[Leaf] %s\n", msg))
-	ctx.buf.WriteString("[Leaf] =================================== \n")
+	ctx.buf.WriteString("=================================== \n")
 
 }
 
 func createCmd(id uint, command string, shell *EnvCommand) *exeCtx {
-	cmd := exec.Command("bash", "-c", command)
+	cmd := exec.Command("/bin/bash", "-cxe", command)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
@@ -74,15 +73,6 @@ func createCmd(id uint, command string, shell *EnvCommand) *exeCtx {
 		buf:     &buf,
 		env:     shell,
 	}
-}
-
-func updateTaskStatus(ctx *exeCtx, status TaskStatus) *Task {
-	var task Task
-	Db.Find(&task, ctx.id)
-	task.Log = ctx.buf.String()
-	task.Status = status
-	Db.Updates(&task)
-	return &task
 }
 
 func createEvnFiles(command *EnvCommand) error {
@@ -116,9 +106,18 @@ func writeToEvnFile(it *EnvShell) error {
 	return nil
 }
 
-func changeStatus(ctx *exeCtx) {
+func taskToRunning(ctx *exeCtx) {
 	var task Task
 	Db.Find(&task, ctx.id)
 	task.Status = Running
 	Db.Updates(&task)
+}
+
+func updateTaskStatus(ctx *exeCtx, status TaskStatus) *Task {
+	var task Task
+	Db.Find(&task, ctx.id)
+	task.Log = ctx.buf.String()
+	task.Status = status
+	Db.Updates(&task)
+	return &task
 }
