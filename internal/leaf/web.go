@@ -344,11 +344,6 @@ func saveApplication(c *gin.Context) {
 			c.JSON(200, fail("应用名称已占用"))
 			return
 		}
-		err = updateUsedEnv(app.ID, app.Envs)
-		if err != nil {
-			c.JSON(200, fail(err.Error()))
-			return
-		}
 		toSave := Application{
 			Name:    app.Name,
 			Enable:  app.Enable,
@@ -356,8 +351,14 @@ func saveApplication(c *gin.Context) {
 			Command: app.Command,
 		}
 		Db.Create(&toSave)
+
+		err = updateUsedEnv(toSave.ID, app.Envs)
+		if err != nil {
+			c.JSON(200, fail(err.Error()))
+			return
+		}
 		c.JSON(200, ok(toSave.ID))
-		return
+
 	} else {
 		if !exist {
 			c.JSON(200, fail("非法状态，应用不存在"))

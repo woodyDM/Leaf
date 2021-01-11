@@ -90,6 +90,9 @@ func listEnv() []SEnv {
 }
 
 func updateUsedEnv(appId uint, newEnvs []*UsedEnv) error {
+	for _,it:=range newEnvs {
+		it.AppId = appId
+	}
 	newMap, e := checkUnique(newEnvs)
 	if e != nil {
 		return e
