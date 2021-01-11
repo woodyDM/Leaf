@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"strconv"
+	"syscall"
 )
 
 type Response struct {
@@ -69,7 +70,8 @@ func StartServer(port int) {
 
 	router.Use(logger, cookieHandler).POST("/api/v1/login", loginC)
 
-	v1 := router.Group("/api/v1",   authHandler)
+	//	v1 := router.Group("/api/v1", authHandler)
+	v1 := router.Group("/api/v1")
 	{
 		app := v1.Group("/app")
 		{
@@ -83,8 +85,8 @@ func StartServer(port int) {
 		task := v1.Group("/task")
 		{
 			task.GET("/detail", taskQuery)
-			//task.POST("/detail", taskQuery)
 			task.GET("", taskPage)
+			task.POST("/kill", taskKill)
 		}
 		env := v1.Group("/env")
 		{
@@ -236,6 +238,25 @@ func taskQuery(ctx *gin.Context) {
 			ctx.JSON(200, paramError)
 		} else {
 			ctx.JSON(200, ok(task))
+		}
+	}
+}
+
+func taskKill(ctx *gin.Context) {
+	if id, err := strconv.Atoi(ctx.Query("id")); err != nil {
+		ctx.JSON(200, paramError)
+	} else {
+		run, exist := CommonPool.get(uint(id))
+		if exist {
+			ct := run.(*exeCtx)
+			err := syscall.Kill(-ct.cmd.Process.Pid, syscall.SIGTERM)
+			if err != nil {
+				ctx.JSON(500, fail(fmt.Sprintf("停止失败:%s", err.Error())))
+			} else {
+				ctx.JSON(200, ok("OK"))
+			}
+		} else {
+			ctx.JSON(500, fail("任务未在运行中"))
 		}
 	}
 }

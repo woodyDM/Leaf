@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
+	"syscall"
 )
 
 type exeCtx struct {
@@ -35,24 +35,13 @@ func (ctx *exeCtx) run() {
 		return
 	}
 	ctx.Info("star to run shells ")
-	err = ctx.cmd.Start()
-	if err != nil {
-		updateTaskStatus(ctx, Fail)
-		return
-	}
-	log.Println("Start to wait")
-	err = ctx.cmd.Wait()
-	state := ctx.cmd.ProcessState
-	log.Printf("wait complete: %v   %v\n", state, err)
-
-	for a := 0; a < 200; a++ {
-		if state == nil {
-			//		time.Sleep(time.Second)
-		}
-	}
-
-	err2 := os.RemoveAll(ctx.env.folder)
-	if err2 != nil {
+	//wait until kill or other exit signal
+	err = ctx.cmd.Run()
+	process := ctx.cmd.Process
+	msg := fmt.Sprintf("Process PID=%d , process state = %v", process.Pid, ctx.cmd.ProcessState)
+	ctx.Info(msg)
+	errWhenRemove := os.RemoveAll(ctx.env.folder)
+	if errWhenRemove != nil {
 		ctx.Warning(fmt.Sprintf("Unable to delete temp folder: %s", ctx.env.folder))
 	}
 	if err == nil {
@@ -79,6 +68,7 @@ func (ctx *exeCtx) Warning(msg string) {
 
 func createCmd(id uint, command string, shell *EnvCommand) *exeCtx {
 	cmd := exec.Command("/bin/bash", "-cxe", command)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
