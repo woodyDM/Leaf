@@ -43,10 +43,13 @@ func (ctx *exeCtx) run() {
 	}
 	go ctx.cmd.Wait()
 	for a:=0;a<200;a++{
-		log.Println(ctx.cmd.ProcessState)
-		time.Sleep(time.Second)
-
+		state := ctx.cmd.ProcessState
+		log.Println(state)
+		if state==nil{
+			time.Sleep(time.Second)
+		}
 	}
+
 
 	err2 := os.RemoveAll(ctx.env.folder)
 	if err2 != nil {
