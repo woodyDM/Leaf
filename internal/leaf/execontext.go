@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"time"
 )
 
 type exeCtx struct {
@@ -41,15 +40,16 @@ func (ctx *exeCtx) run() {
 		updateTaskStatus(ctx, Fail)
 		return
 	}
-	go ctx.cmd.Wait()
-	for a:=0;a<200;a++{
-		state := ctx.cmd.ProcessState
-		log.Println(state)
-		if state==nil{
-			time.Sleep(time.Second)
+	log.Println("Start to wait")
+	err = ctx.cmd.Wait()
+	state := ctx.cmd.ProcessState
+	log.Printf("wait complete: %v   %v\n", state, err)
+
+	for a := 0; a < 200; a++ {
+		if state == nil {
+			//		time.Sleep(time.Second)
 		}
 	}
-
 
 	err2 := os.RemoveAll(ctx.env.folder)
 	if err2 != nil {
