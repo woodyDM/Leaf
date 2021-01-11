@@ -70,8 +70,7 @@ func StartServer(port int) {
 
 	router.Use(logger, cookieHandler).POST("/api/v1/login", loginC)
 
-	//	v1 := router.Group("/api/v1", authHandler)
-	v1 := router.Group("/api/v1")
+	v1 := router.Group("/api/v1", authHandler)
 	{
 		app := v1.Group("/app")
 		{
