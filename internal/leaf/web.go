@@ -83,6 +83,7 @@ func StartServer(port int) {
 		task := v1.Group("/task")
 		{
 			task.GET("/detail", taskQuery)
+			//task.POST("/detail", taskQuery)
 			task.GET("", taskPage)
 		}
 		env := v1.Group("/env")
