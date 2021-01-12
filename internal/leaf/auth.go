@@ -12,7 +12,7 @@ import (
 )
 
 var Counter = 0
-var max = 100
+var max = 10
 
 type User struct {
 	gorm.Model
@@ -44,6 +44,7 @@ func nameMatch(name string) bool {
 	r := regexp.MustCompile(`(\w)+`)
 	return r.MatchString(name)
 }
+
 func (u *User) passMatch(pass string) bool {
 	if u.Salt == "" {
 		panic("Invalid User ")

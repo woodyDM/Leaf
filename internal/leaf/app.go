@@ -175,8 +175,8 @@ func (app *Application) genEnvShell(seq int) *EnvCommand {
 
 func findAppByName(name string) (*Application, bool) {
 	var app Application
-	err := Db.Where("name", name).First(&app).Error
-	if err == gorm.ErrRecordNotFound {
+	Db.Where("name", name).Find(&app)
+	if app.ID == 0 {
 		return nil, false
 	} else {
 		return &app, true
