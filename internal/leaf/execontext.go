@@ -11,10 +11,15 @@ import (
 
 type exeCtx struct {
 	id      uint
+	appId   uint
 	command string
 	cmd     *exec.Cmd
 	buf     *bytes.Buffer
 	env     *EnvCommand
+}
+
+func (ctx *exeCtx) groupId() uint {
+	return ctx.appId
 }
 
 func (ctx *exeCtx) whenError(e error) {
@@ -45,6 +50,7 @@ func (ctx *exeCtx) run() {
 		ctx.Warning(fmt.Sprintf("Unable to delete temp folder: %s", ctx.env.folder))
 	}
 	if err == nil {
+		ctx.Info("======== SUCCESS =======")
 		updateTaskStatus(ctx, Success)
 	} else {
 		updateTaskStatus(ctx, Fail)
@@ -63,17 +69,17 @@ func (ctx *exeCtx) Warning(msg string) {
 	ctx.buf.WriteString("============= WARNING ============= \n")
 	ctx.buf.WriteString(fmt.Sprintf("[Leaf] %s\n", msg))
 	ctx.buf.WriteString("=================================== \n")
-
 }
 
-func createCmd(id uint, command string, shell *EnvCommand) *exeCtx {
+func createCmd(id uint, appId uint, command string, shell *EnvCommand) *exeCtx {
 	cmd := exec.Command("/bin/bash", "-cxe", command)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 	return &exeCtx{
-		id:      id,
+		id:    id,
+		appId: appId,
 		command: command,
 		cmd:     cmd,
 		buf:     &buf,

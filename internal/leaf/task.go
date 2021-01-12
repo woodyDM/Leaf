@@ -56,6 +56,9 @@ func taskDetail(id uint) (*Task, bool) {
 		if exist    {
 			it,_:=ctx.(*exeCtx)
 			task.Log = it.buf.String()
+		}else{
+			task.Status = Fail
+			Db.Updates(&task)
 		}
 	}
 	return &task, task.ID != 0

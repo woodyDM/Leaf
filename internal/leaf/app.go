@@ -123,8 +123,8 @@ func (app *Application) runCommand(seq int) (*Task, error) {
 	}
 	Db.Create(&task)
 	//to start task in other goroutine
-	cmd := createCmd(task.ID, sh, envShell)
-	CommonPool.submit(cmd)
+	cmd := createCmd(task.ID, app.ID,sh, envShell)
+	CommonPool.Submit(cmd)
 	return &task, nil
 }
 
