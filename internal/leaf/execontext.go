@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
+	"time"
 )
 
 type exeCtx struct {
@@ -78,8 +79,8 @@ func createCmd(id uint, appId uint, command string, shell *EnvCommand) *exeCtx {
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 	return &exeCtx{
-		id:    id,
-		appId: appId,
+		id:      id,
+		appId:   appId,
 		command: command,
 		cmd:     cmd,
 		buf:     &buf,
@@ -121,6 +122,8 @@ func writeToEvnFile(it *EnvShell) error {
 func taskToRunning(ctx *exeCtx) {
 	var task Task
 	Db.Find(&task, ctx.id)
+	now := time.Now()
+	task.StartTime = &now
 	task.Status = Running
 	Db.Updates(&task)
 }
@@ -130,6 +133,8 @@ func updateTaskStatus(ctx *exeCtx, status TaskStatus) *Task {
 	Db.Find(&task, ctx.id)
 	task.Log = ctx.buf.String()
 	task.Status = status
+	now := time.Now()
+	task.FinishTime = &now
 	Db.Updates(&task)
 	return &task
 }
