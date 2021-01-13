@@ -1,6 +1,9 @@
 package leaf
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"time"
+)
 
 type TaskStatus int
 
@@ -13,22 +16,24 @@ const (
 
 type Task struct {
 	gorm.Model
-	AppId   uint       `json:"appId"`
-	Command string     `json:"command"`
-	Seq     int        `json:"seq"`
-	Log     string     `json:"log"`
-	Status  TaskStatus `json:"status"`
+	AppId      uint
+	Command    string
+	Seq        int
+	Log        string
+	Status     TaskStatus
+	StartTime  *time.Time
+	FinishTime *time.Time
 }
 
 type TaskPage struct {
 	Page
-	List []Task
+	List []TaskR
 }
 
 func queryTasks(page TaskPageQuery) TaskPage {
 	list := make([]Task, 0)
 	Db.Model(&Task{}).
-		Select("id, seq,app_id,status,created_at").
+		Select("id, seq,app_id,status,created_at, start_time,finish_time ").
 		Where("app_id = ? ", page.AppId).
 		Order("id desc").
 		Offset(page.Offset()).
@@ -38,28 +43,33 @@ func queryTasks(page TaskPageQuery) TaskPage {
 	Db.Model(&Task{}).
 		Where("app_id = ? ", page.AppId).
 		Count(&c)
+	listR := make([]TaskR, 0)
+	for _, t := range list {
+		listR = append(listR, newTaskR(t))
+	}
 	return TaskPage{
 		Page: Page{
 			PageNum:  page.PageNum,
 			PageSize: page.PageSize,
 			Total:    int(c),
 		},
-		List: list,
+		List: listR,
 	}
 }
 
-func taskDetail(id uint) (*Task, bool) {
+func taskDetail(id uint) (*TaskR, bool) {
 	var task Task
 	Db.Find(&task, id)
-	if task.Status==Running{
+	if task.Status == Running {
 		ctx, exist := CommonPool.get(id)
-		if exist    {
-			it,_:=ctx.(*exeCtx)
+		if exist {
+			it, _ := ctx.(*exeCtx)
 			task.Log = it.buf.String()
-		}else{
+		} else {
 			task.Status = Fail
 			Db.Updates(&task)
 		}
 	}
-	return &task, task.ID != 0
+	r := newTaskR(task)
+	return &r, task.ID != 0
 }

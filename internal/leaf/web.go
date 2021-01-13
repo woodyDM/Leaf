@@ -281,11 +281,11 @@ func runTask(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(200, notFound)
 	} else {
-		task, err := app.run()
+		taskId, err := app.run()
 		if err != nil {
 			ctx.JSON(200, fail(err.Error()))
 		} else {
-			ctx.JSON(200, ok(task.ID))
+			ctx.JSON(200, ok(taskId))
 		}
 	}
 }

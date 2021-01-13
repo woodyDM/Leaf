@@ -76,13 +76,18 @@ func (app *Application) home() string {
 	return path.Join(GlobalConfig.Home, app.Name)
 }
 
-func (app *Application) run() (*Task, error) {
+func (app *Application) run() (uint, error) {
 	err := mkdir(app.gitHome())
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	seq := taskSeq(app.ID)
-	return app.runCommand(seq)
+	task, err := app.runCommand(seq)
+	if err != nil {
+		return 0, nil
+	} else {
+		return task.ID, nil
+	}
 }
 
 func taskSeq(appId uint) int {
@@ -123,7 +128,7 @@ func (app *Application) runCommand(seq int) (*Task, error) {
 	}
 	Db.Create(&task)
 	//to start task in other goroutine
-	cmd := createCmd(task.ID, app.ID,sh, envShell)
+	cmd := createCmd(task.ID, app.ID, sh, envShell)
 	CommonPool.Submit(cmd)
 	return &task, nil
 }
