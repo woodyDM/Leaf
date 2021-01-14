@@ -108,10 +108,10 @@ func createEvnFiles(command *EnvCommand) error {
 func writeToEvnFile(it *EnvShell) error {
 	fileName := it.fileName
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY, 0770)
-	defer file.Close()
 	if err != nil {
 		return nil
 	}
+	defer file.Close()
 	_, err2 := file.WriteString(it.content)
 	if err2 != nil {
 		return errors.New(fmt.Sprintf("unable to write env file %s. ", it.fileName))
@@ -135,6 +135,7 @@ func updateTaskStatus(ctx *exeCtx, status TaskStatus) *Task {
 	task.Status = status
 	now := time.Now()
 	task.FinishTime = &now
+	task.CostSeconds = now.Unix() - task.StartTime.Unix()
 	Db.Updates(&task)
 	return &task
 }

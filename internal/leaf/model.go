@@ -8,6 +8,8 @@ type Page struct {
 	Total    int
 }
 
+const DefaultTaskCost int64 = -1
+
 func (p Page) Offset() int {
 	return (p.PageNum - 1) * p.PageSize
 }
@@ -34,7 +36,7 @@ func formatTime(t *time.Time) string {
 }
 
 func newTaskR(t Task) TaskR {
-	var s int64 = -1
+	var s int64 = DefaultTaskCost
 	if t.FinishTime != nil && t.StartTime != nil {
 		s = t.FinishTime.Unix() - t.StartTime.Unix()
 	}

@@ -16,13 +16,14 @@ const (
 
 type Task struct {
 	gorm.Model
-	AppId      uint
-	Command    string
-	Seq        int
-	Log        string
-	Status     TaskStatus
-	StartTime  *time.Time
-	FinishTime *time.Time
+	AppId       uint
+	Command     string
+	Seq         int
+	Log         string
+	Status      TaskStatus
+	StartTime   *time.Time
+	FinishTime  *time.Time
+	CostSeconds int64
 }
 
 type TaskPage struct {
